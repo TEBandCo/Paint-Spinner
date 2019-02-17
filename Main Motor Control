@@ -1,0 +1,70 @@
+//whoever has to pick this apart, I'm sorry
+
+#include <LiquidCrystal.h>
+
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2); // LCD Pinouts
+
+
+//constants such as pinouts, veriable (int only)
+int ledRed = 8; // Power On LED
+int ledGreen = 7; // Motor relay powered
+int relayButton = 9; //main latching button for relay
+int buttonState = 0;
+int ledRedState = LOW;
+int a = 0; //this is the time counter, starts at 0 and adds one to itself
+const int ledInternal = LED_BUILTIN; // internal board led to test the relay button is working
+
+//time controllers, all in millis
+unsigned long previousMillis = 0; //this sets the val to 0
+const long interval2 = 500; // whole second interval (it's only 500 as half the time its checking something else)
+
+void setup() {
+  lcd.begin(16, 2); //sets the LCD position for static message
+  lcd.print("Paint mixed for:"); // message on LCD
+  pinMode(relayButton, INPUT); //sets pin to input
+  pinMode(ledRed, OUTPUT); //sets pin to out
+  pinMode(ledGreen, OUTPUT); // sets pin to out
+  pinMode(ledInternal, OUTPUT); // set pin to output
+
+}
+
+void loop() {
+  unsigned long currentMillis = millis(); // counter function, telling it whats its role is in life
+  buttonState = digitalRead(relayButton); //sets state of button
+
+  if (buttonState == LOW) { // if the button is low, then steady green light
+    digitalWrite(ledGreen, HIGH); //speak of the devil, the steady gree
+  } else { // UNLESS the button is low, its going to do the below:
+    if (currentMillis - previousMillis >= interval2) { // satans work itself, this is the timer
+      previousMillis = currentMillis; // more of timer
+      if (ledRedState == LOW) { // flasher, checks to see if low, then sets to high
+        ledRedState = HIGH; // sets to high
+        lcd.setCursor(3, 1); //move curser to line 2, 3rd pos
+        lcd.print(a); //print the char
+        a ++; //adds one to a
+        lcd.setCursor(3, 1); //sets to the middle of the disply)
+        lcd.print (a); // prints the new char
+        digitalWrite(ledInternal, HIGH); //sets the internal test
+      } else { //else, which is always will do
+        ledRedState = LOW; //set to low, then goes to top unless button is off
+
+      }
+    }
+    digitalWrite(ledRed, ledRedState); //not a clue, it looks important.
+  }
+  //time to scrub, this part below cleans everything up for next run
+  if (buttonState == LOW) { //if the button is off
+    ledRedState == LOW; // set red led to off
+    digitalWrite(ledRed, LOW); // this does the same, I'm scared to remove
+    digitalWrite(ledInternal, LOW); // clears internal board led for test
+    a = a - a; // clears maths of second counter
+    lcd.setCursor(3, 1); //clears the counter area
+    lcd.print("0"); // sets back to 0
+    lcd.setCursor(4, 1); // selects second row
+    lcd.print(" "); // clears it with a space
+    lcd.setCursor(5, 1); // selects second row
+    lcd.print(" ");
+    lcd.setCursor(6, 1); // selects second row
+    lcd.print(" ");
+  }
+}
